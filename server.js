@@ -1,10 +1,22 @@
-import app from "./app.js";
-import logger from "#utils/logger.js";
+// Entry point: env → DB → app → listen.
+// Keep it thin — everything else lives in src/.
+import { env } from "#src/config/env.js";
+import { connectDB } from "#src/config/db.js";
+import { createApp } from "#src/app.js";
+import logger from "#src/utils/logger.js";
 
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  logger.info(
-    `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
-  );
+process.on("unhandledRejection", (err) => {
+  logger.error("Unhandled rejection — shutting down:", err);
+  process.exit(1);
 });
+
+async function start() {
+  await connectDB();
+  const app = await createApp();
+
+  app.listen(env.port, () => {
+    logger.info(`🚀 ${env.appName} API running in ${env.nodeEnv} mode on port ${env.port}`);
+  });
+}
+
+start();
