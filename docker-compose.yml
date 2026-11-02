@@ -1,0 +1,24 @@
+# One command for the whole stack:  docker compose up --build
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/backend_template
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:

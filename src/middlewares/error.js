@@ -1,41 +1,56 @@
-import ErrorHandler from "#utils/errorHandler.js"
-import { HTTP_STATUS } from "#utils/statusCodes.js"
+import { env } from "#src/config/env.js";
+import logger from "#src/utils/logger.js";
+import { HTTP } from "#src/utils/httpStatus.js";
 
-export const errorMiddleware = (err, req, res, next) => {
-  err.statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR
-  err.message = err.message || "Internal server error"
+// 404 — must be registered AFTER all routes.
+export function notFound(_req, _res, next) {
+  const err = new Error("Route not found");
+  err.statusCode = HTTP.NOT_FOUND;
+  next(err);
+}
 
-  // Mongoose Bad ObjectId
+// Central error handler — every ApiError, Joi, Mongoose or unknown error
+// ends up here as one clean JSON shape. Must be the LAST middleware.
+export function errorHandler(err, _req, res, _next) {
+  let status = err.statusCode ?? HTTP.SERVER_ERROR;
+  let message = err.message ?? "Something went wrong";
+  let errors = err.errors ?? null;
+
+  // Mongoose: bad ObjectId etc.
   if (err.name === "CastError") {
-    const message = `Resource not found with id: ${err.value}`
-    err = new ErrorHandler(message, HTTP_STATUS.BAD_REQUEST)
+    status = HTTP.BAD_REQUEST;
+    message = `Invalid ${err.path}: ${err.value}`;
   }
-
-  if (err.name === "JsonWebTokenError") {
-    const message = `Token is invalid, Try again`
-    err = new ErrorHandler(message, HTTP_STATUS.BAD_REQUEST)
-  }
-
-  if (err.name === "TokenExpiredError") {
-    const message = "Token is expire, Try again"
-    err = new ErrorHandler(message, HTTP_STATUS.BAD_REQUEST)
-  }
-
-  // Mongoose Duplicate Key
+  // Mongoose: duplicate key (e.g. email already taken at the DB level)
   if (err.code === 11000) {
-    const message = `Duplicate ${Object.keys(err.keyValue)} Entered`
-    err = new ErrorHandler(message, HTTP_STATUS.BAD_REQUEST)
+    status = HTTP.CONFLICT;
+    const field = Object.keys(err.keyValue ?? {})[0] ?? "field";
+    message = `This ${field} is already in use`;
   }
-
-  // Mongoose Validation Error
+  // Mongoose: schema validation
   if (err.name === "ValidationError") {
-    const message = Object.values(err.errors).map(val => val.message).join(", ")
-    err = new ErrorHandler(message, HTTP_STATUS.BAD_REQUEST)
+    status = HTTP.BAD_REQUEST;
+    message = "Validation failed";
+    errors = Object.values(err.errors).map((e) => ({
+      field: e.path,
+      message: e.message,
+    }));
+  }
+  // JWT
+  if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+    status = HTTP.UNAUTHORIZED;
+    message = "Invalid or expired token";
   }
 
-  return res.status(err.statusCode).json({
+  if (status === HTTP.SERVER_ERROR) {
+    logger.error(err);
+  }
+
+  res.status(status).json({
     success: false,
-    message: err.message,
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined
-  })
+    message,
+    ...(errors ? { errors } : {}),
+    // Stack traces only outside production — never leak internals live.
+    ...(env.isProd ? {} : { stack: err.stack }),
+  });
 }

@@ -1,46 +1,69 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "server": "nodemon server.js"
-  },
-  "author": "murtuza",
-  "license": "MIT",
-  "description": "",
+  "author": "Murtuza Ahmed",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.4.1",
+    "google-auth-library": "^9.15.0",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
-    "module-alias": "^2.2.3",
     "mongoose": "^8.18.0",
     "morgan": "^1.10.1",
     "nodemailer": "^7.0.6",
     "pino": "^9.9.4",
-    "pino-pretty": "^13.1.1",
-    "twilio": "^5.9.0"
+    "pino-pretty": "^13.2.0",
+    "twilio": "^5.9.0",
+    "cloudinary": "^2.7.0",
+    "multer": "^2.0.1"
   },
+  "description": "Premium Express + MongoDB backend template — JWT auth, RBAC, OTP, Google login, Cloudinary uploads, hardened security",
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.10",
     "eslint": "^9.35.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2"
   },
   "imports": {
-    "#utils/*": "./src/utils/*",
-    "#models/*": "./src/models/*",
-    "#controllers/*": "./src/controllers/*",
-    "#middlewares/*": "./src/middlewares/*",
-    "#hooks/*": "./src/hooks/*"
+    "#src/*": "./src/*"
+  },
+  "license": "MIT",
+  "main": "server.js",
+  "name": "backend-template",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "lint": "eslint .",
+    "start": "node server.js",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "type": "module",
+  "version": "1.0.0",
+  "keywords": [
+    "express",
+    "mongodb",
+    "mongoose",
+    "backend-template",
+    "boilerplate",
+    "starter",
+    "jwt",
+    "auth",
+    "rest-api",
+    "rbac",
+    "cloudinary"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Murtuza-Ahmed/backend-template-mongoDB.git"
+  },
+  "homepage": "https://github.com/Murtuza-Ahmed/backend-template-mongoDB#readme",
+  "bugs": {
+    "url": "https://github.com/Murtuza-Ahmed/backend-template-mongoDB/issues"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
   }
 }
